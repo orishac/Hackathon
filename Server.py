@@ -40,6 +40,11 @@ TCP.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 TCP.bind(('', port))
 TCP.listen()
 
+#setting up the basis for the game
+game_lock = Lock()
+already_won = False
+continue_lock = Lock()
+winning_client = "no-winner"
 
 # for a limited time of 10 seconds send broadcast through the UDP socket
 def broadcastSender():
@@ -51,6 +56,96 @@ def broadcastSender():
             time.sleep(1)
     except:
         print("something went wrong in sending offers")
+
+
+def collect_data(clientSocket1 ,clientSocket2, correctAns, clients_names, names_tuple):
+    global already_won
+    global winning_client
+    already_won = False
+    winning_client = "no-winner"
+    now = time.time()
+    clientSocket1.settimeout(TIMEOUT)
+    clientSocket2.settimeout(TIMEOUT)
+    reads,_,_ = select.select([clientSocket1, clientSocket2], [], [], TIMEOUT)
+    if clientSocket1 in reads:
+        data = clientSocket1.recv(BYTES_TO_RECIEVE).decode()
+        game_lock.acquire()
+        if already_won == False: 
+            if data == str(correctAns):
+                winning_client = clients_names[0]
+                game_lock.release()
+                already_won = True
+                return
+            winning_client = clients_names[1]    
+            game_lock.release()
+            return
+        if already_won == True: 
+                game_lock.release()
+                already_won = True
+                return
+    if clientSocket2 in reads:
+        data = clientSocket2.recv(BYTES_TO_RECIEVE).decode()
+        game_lock.acquire()
+        if already_won == False: 
+            if data == str(correctAns):
+                winning_client = clients_names[1]
+                game_lock.release()
+                already_won = True
+                return
+            winning_client = clients_names[0]      
+            game_lock.release()
+            return
+        if already_won == True: 
+                game_lock.release()
+                already_won = True
+                return
+    
+                            
+# The actual game start in this function
+# listen on socket in order to get clients name, then sends them random math question
+# in the end, detemine which client won and sent an appropiate question
+def gameManager(clients, TCPsocket):
+    try:
+        firstClientName = clients[0][0].recv(BYTES_TO_RECIEVE).decode()
+        secondClientName = clients[1][0].recv(BYTES_TO_RECIEVE).decode()
+        clients[0][0].settimeout(TIMEOUT)
+        clients[1][0].settimeout(TIMEOUT)
+        firstNumber = randrange(4)
+        secondNumber = randrange(5)
+        startMessage = "Welcome to Quick Maths.\n"
+        startMessage += "Player 1: " + firstClientName + '\n'
+        startMessage += "Player 2: " + secondClientName + '\n'
+        startMessage += "==\n"
+        startMessage += "Please answer the following question as fast as you can:\n"
+        startMessage += "How much is "+str(firstNumber)+"+"+str(secondNumber)+"?\n"
+        sum = firstNumber + secondNumber
+        message = startMessage.encode()
+        clients[0][0].sendall(message)
+        clients[1][0].sendall(message)
+
+        namesTuple = [firstClientName, secondClientName]
+
+        
+        firstClientThread = Thread(target = collect_data,args= ((clients[0][0]), clients[1][0], sum, namesTuple, namesTuple)) #open thread for first client to get its answer
+        firstClientThread.start()
+        firstClientThread.join() 
+        
+
+        finish_game_message = "Game over!\nThe correct answer was "+ str(sum) +"!\n"
+        winnerClient = finish_game_message + "Congratulations to the winner: "+ winning_client +"\n"
+        draw_message = finish_game_message + "The game ended with a draw\n"
+        if winning_client == "no-winner": 
+            end_message = draw_message 
+        else :
+            end_message = winnerClient
+        print(style.CYAN + end_message)
+        end_message = end_message.encode()
+        clients[0][0].sendall(end_message)
+        clients[1][0].sendall(end_message)
+    except:
+        ()
+
+
 
  #a thread run this function to connect new clients into a list which it will be work with later       
 def connect_clients(connection_client, sock):
