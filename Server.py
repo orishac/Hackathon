@@ -7,6 +7,7 @@ from threading import Lock, Thread
 from scapy.arch import get_if_addr
 from random import randrange
 from _thread import *
+import select
 
 class style:
     BLACK = '\033[30m'
@@ -176,4 +177,5 @@ def main():
         print("Game over, sending out offer requests...")  #END GAME
 
 
-if __name__ == '__main__
+if __name__ == '__main__':
+    main()
