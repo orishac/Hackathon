@@ -6,13 +6,7 @@ import struct
 from threading import Thread
 import select
 
-TIMEOUT = 10
-BYTES_TO_READ = 1024
-destination_port = 13117
-port = 2178
-UDP_ip = "172.1.255.255"
-
-class style:
+class colors:
     BLACK = '\033[30m'
     RED = '\033[31m'
     GREEN = '\033[32m'
@@ -24,6 +18,12 @@ class style:
     UNDERLINE = '\033[4m'
     RESET = '\033[0m'
 
+
+TIMEOUT = 10
+BYTES_TO_READ = 1024
+destination_port = 13117
+port = 2178
+UDP_ip = "172.1.255.255"
 
 def get_from_server(TCP_Socket):
     got_answer = False
@@ -52,7 +52,7 @@ def get_from_server(TCP_Socket):
     TCP_Socket.close()
 
 def main():
-    print(style.GREEN + "Client started, listening for offer requests...")
+    print(colors.GREEN + "Client started, listening for offer requests...")
     while True:
         #opening UDP socket for broadcast and TCP socket for game
         UDP_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)  
@@ -68,16 +68,16 @@ def main():
         try:
             cookie, message_type, server_tcp_port = struct.unpack('lbH', data)  # get message and encode it as a the given format
             if cookie == 0xabcddcba or message_type == 0x2:  # check if the message is as the expected format
-                print(style.GREEN + "Received offer from " + server_ip_address + " attempting to connect...")
+                print(colors.GREEN + "Received offer from " + server_ip_address + " attempting to connect...")
             TCP_socket.connect((server_ip_address, server_tcp_port))
             nickname = input("Type In Your Nickname: ")
             nickname = nickname.encode()
             TCP_socket.sendall(nickname)
-            sys.stdout.write(style.YELLOW + TCP_socket.recv(BYTES_TO_READ).decode())  #get message of connecting to server and print it it to user
+            sys.stdout.write(colors.YELLOW + TCP_socket.recv(BYTES_TO_READ).decode())  #get message of connecting to server and print it it to user
             game = Thread(target=get_from_server, args=(TCP_socket,))
             game.start() 
             game.join()
-            print(style.RED + "Server disconnected, listening for offer requests...")
+            print(colors.RED + "Server disconnected, listening for offer requests...")
         except:
             ()
 

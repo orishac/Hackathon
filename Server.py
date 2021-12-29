@@ -43,7 +43,6 @@ TCP.listen()
 #setting up the basis for the game
 game_lock = Lock()
 already_won = False
-continue_lock = Lock()
 winning_client = "no-winner"
 
 # for a limited time of 10 seconds send broadcast through the UDP socket
@@ -67,7 +66,7 @@ def collect_data(clientSocket1 ,clientSocket2, correctAns, clients_names):
     clientSocket1.settimeout(TIMEOUT)
     clientSocket2.settimeout(TIMEOUT)
     reads,_,_ = select.select([clientSocket1, clientSocket2], [], [], TIMEOUT)
-    #the first client socket that recieve answer entering the functionality that checks the answer and determine the winner
+    #the first client socket that receive answer entering the functionality that checks the answer and determine the winner
     if clientSocket1 in reads:
         data = clientSocket1.recv(BYTES_TO_RECIEVE).decode()
         game_lock.acquire()
