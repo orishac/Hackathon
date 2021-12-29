@@ -23,7 +23,7 @@ class colors:
     
 #to avoid hard coded things, this is how we get the addresses
 port = 2028
-ip_address = get_if_addr('eth2')
+ip_address = get_if_addr('eth1')
 #ip_address = "0.0.0.0"
 destination_port = 13117
 UDP_ip = '<broadcast>'
