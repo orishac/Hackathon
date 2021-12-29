@@ -22,7 +22,7 @@ class colors:
 
     
 #to avoid hard coded things, this is how we get the addresses
-port = 2028
+port = 2189
 ip_address = get_if_addr('eth1')
 #ip_address = "0.0.0.0"
 destination_port = 13117
@@ -36,7 +36,7 @@ UDP.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 UDP.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 UDP.bind(('', port))
 TCP = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-TCP.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+#TCP.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 TCP.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
 TCP.bind(('', port))
 TCP.listen()
@@ -147,7 +147,10 @@ def gameManager(clients, TCPsocket):
 def connect_clients(connection_client, sock):
     while len(connection_client) < 2:
         try:
+            sock.settimeout(15)
+            print("GOT HERE")
             connection, client_address = sock.accept()
+            print("222222222222222")
             client_tuple = [connection, client_address]
             connection_client.append(client_tuple)
             print(colors.BLUE + "New Player Added To The Game")
@@ -161,7 +164,7 @@ def main():
     while True:
         time.sleep(1)  # reduce CPU preformence
         connected_client = [] # enpty list for adding clients later
-        client_connector = Thread(target=connect_clients, args=(connected_client, TCP,))  # listen and add new client to the game
+        client_connector = Thread(target=connect_clients, args=(connected_client, TCP))  # listen and add new client to the game
         sending = Thread(target=broadcastSender, args=())
         sending.start()
         client_connector.start()
