@@ -22,8 +22,8 @@ class colors:
 
     
 #to avoid hard coded things, this is how we get the addresses
-port = 2130
-ip_address = get_if_addr('eth2')
+port = 2678
+ip_address = get_if_addr('eth1')
 #ip_address = "0.0.0.0"
 destination_port = 13117
 UDP_ip = '<broadcast>'
@@ -51,7 +51,7 @@ def broadcastSender():
         now = time.time()
         stop = now + TIMEOUT
         while time.time() < stop:
-            UDP.sendto((struct.pack('lbH', 0xabcddcba, 0x2, port)), (UDP_ip, destination_port))
+            UDP.sendto((struct.pack('IBH', 0xabcddcba, 0x2, port)), (UDP_ip, destination_port))
             time.sleep(1)
     except:
         print("something went wrong in sending offers")

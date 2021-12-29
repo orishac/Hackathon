@@ -66,7 +66,7 @@ def main():
         UDP_sock.close()
         #decode the data
         try:
-            cookie, message_type, server_tcp_port = struct.unpack('lbH', data)  # get message and encode it as a the given format
+            cookie, message_type, server_tcp_port = struct.unpack('IBH', data)  # get message and encode it as a the given format
             if cookie == 0xabcddcba or message_type == 0x2:  # check if the message is as the expected format
                 print(colors.GREEN + "Received offer from " + server_ip_address + " attempting to connect...")
             TCP_socket.connect((server_ip_address, server_tcp_port))
