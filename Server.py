@@ -8,7 +8,7 @@ from random import randrange
 from _thread import *
 import select
 
-class style:
+class colors:
     BLACK = '\033[30m'
     RED = '\033[31m'
     GREEN = '\033[32m'
@@ -56,6 +56,25 @@ def broadcastSender():
     except:
         print("something went wrong in sending offers")
 
+def decide_winner(socket, correctAns, winningName, loserName):
+    global already_won
+    global game_lock
+    data = socket.recv(BYTES_TO_RECIEVE).decode()
+    game_lock.acquire()
+    if already_won == False: 
+        if data == str(correctAns):
+            winning_client = winningName
+            game_lock.release()
+            already_won = True
+            return
+        winning_client = loserName   
+        game_lock.release()
+        return
+    if already_won == True: 
+            game_lock.release()
+            already_won = True
+            return
+
 
 def collect_data(clientSocket1 ,clientSocket2, correctAns, clients_names):
     global already_won
@@ -68,37 +87,11 @@ def collect_data(clientSocket1 ,clientSocket2, correctAns, clients_names):
     reads,_,_ = select.select([clientSocket1, clientSocket2], [], [], TIMEOUT)
     #the first client socket that receive answer entering the functionality that checks the answer and determine the winner
     if clientSocket1 in reads:
-        data = clientSocket1.recv(BYTES_TO_RECIEVE).decode()
-        game_lock.acquire()
-        if already_won == False: 
-            if data == str(correctAns):
-                winning_client = clients_names[0]
-                game_lock.release()
-                already_won = True
-                return
-            winning_client = clients_names[1]    
-            game_lock.release()
-            return
-        if already_won == True: 
-                game_lock.release()
-                already_won = True
-                return
+        decide_winner(clientSocket1, correctAns, clients_names[0], clients_names[1]) 
     if clientSocket2 in reads:
-        data = clientSocket2.recv(BYTES_TO_RECIEVE).decode()
-        game_lock.acquire()
-        if already_won == False: 
-            if data == str(correctAns):
-                winning_client = clients_names[1]
-                game_lock.release()
-                already_won = True
-                return
-            winning_client = clients_names[0]      
-            game_lock.release()
-            return
-        if already_won == True: 
-                game_lock.release()
-                already_won = True
-                return
+        decide_winner(clientSocket2, correctAns, clients_names[1], clients_names[0])
+    return
+
     
                             
 # The actual game start in this function
@@ -139,7 +132,7 @@ def gameManager(clients, TCPsocket):
     else:
         end_message = winnerClient
 
-    print(style.CYAN + end_message)
+    print(colors.CYAN + end_message)
 
     #send the results to both clients through their respective sockets
     end_message = end_message.encode()
@@ -155,14 +148,14 @@ def connect_clients(connection_client, sock):
             connection, client_address = sock.accept()
             client_tuple = [connection, client_address]
             connection_client.append(client_tuple)
-            print(style.BLUE + "New Player Added To The Game")
+            print(colors.BLUE + "New Player Added To The Game")
         except:
             print("There was a problem while connecting new player to the game")
 
 
 def main():
     message = "Server started, listening on IP address " + ip_address
-    print(style.CYAN + message)
+    print(colors.CYAN + message)
     while True:
         time.sleep(1)  # reduce CPU preformence
         connected_client = [] # enpty list for adding clients later
