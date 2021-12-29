@@ -23,7 +23,7 @@ TIMEOUT = 10
 BYTES_TO_READ = 1024
 destination_port = 13117
 port = 2178
-UDP_ip = "172.1.255.255"
+
 
 def get_from_server(TCP_Socket):
     got_answer = False
