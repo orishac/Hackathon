@@ -149,7 +149,7 @@ def connect_clients(connection_client, sock):
         try:
             sock.settimeout(15)
             print("GOT HERE")
-            connection, client_address = sock.accept()
+            (connection, client_address) = sock.accept()
             print("222222222222222")
             client_tuple = [connection, client_address]
             connection_client.append(client_tuple)
