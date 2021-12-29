@@ -155,7 +155,6 @@ def connect_clients(connection_client, sock):
         try:
             connection, client_address = sock.accept()
             client_tuple = [connection, client_address]
-            print(client_address)
             connection_client.append(client_tuple)
             print(style.BLUE + "New Player Added To The Game")
         except:
