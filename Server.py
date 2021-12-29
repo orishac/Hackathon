@@ -22,11 +22,11 @@ class colors:
 
     
 #to avoid hard coded things, this is how we get the addresses
-port = 2670
+port = 2598
 ip_address = get_if_addr('eth1')
 #ip_address = "0.0.0.0"
 destination_port = 13117
-UDP_ip = '<broadcast>'
+UDP_ip = ''
 TIMEOUT = 10
 BYTES_TO_RECIEVE = 1024
 
