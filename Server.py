@@ -59,6 +59,7 @@ def broadcastSender():
 def decide_winner(socket, correctAns, winningName, loserName):
     global already_won
     global game_lock
+    global winning_client
     data = socket.recv(BYTES_TO_RECIEVE).decode()
     game_lock.acquire()
     if already_won == False: 
