@@ -1,4 +1,3 @@
-import random
 import socket
 import os
 import time
@@ -53,21 +52,22 @@ def broadcastSender():
         now = time.time()
         stop = now + TIMEOUT
         while time.time() < stop:
-            UDP.sendto((struct.pack('LBH', 0xabcddcba, 0x2, port)), (UDP_ip, destination_port))
+            UDP.sendto((struct.pack('lbH', 0xabcddcba, 0x2, port)), (UDP_ip, destination_port))
             time.sleep(1)
     except:
         print("something went wrong in sending offers")
 
 
-def collect_data(clientSocket1 ,clientSocket2, correctAns, clients_names, names_tuple):
+def collect_data(clientSocket1 ,clientSocket2, correctAns, clients_names):
     global already_won
     global winning_client
+    #setting the global variables to default
     already_won = False
     winning_client = "no-winner"
-    now = time.time()
     clientSocket1.settimeout(TIMEOUT)
     clientSocket2.settimeout(TIMEOUT)
     reads,_,_ = select.select([clientSocket1, clientSocket2], [], [], TIMEOUT)
+    #the first client socket that recieve answer entering the functionality that checks the answer and determine the winner
     if clientSocket1 in reads:
         data = clientSocket1.recv(BYTES_TO_RECIEVE).decode()
         game_lock.acquire()
@@ -106,45 +106,46 @@ def collect_data(clientSocket1 ,clientSocket2, correctAns, clients_names, names_
 # listen on socket in order to get clients name, then sends them random math question
 # in the end, detemine which client won and sent an appropiate question
 def gameManager(clients, TCPsocket):
-    try:
-        firstClientName = clients[0][0].recv(BYTES_TO_RECIEVE).decode()
-        secondClientName = clients[1][0].recv(BYTES_TO_RECIEVE).decode()
-        clients[0][0].settimeout(TIMEOUT)
-        clients[1][0].settimeout(TIMEOUT)
-        firstNumber = randrange(4)
-        secondNumber = randrange(5)
-        startMessage = "Welcome to Quick Maths.\n"
-        startMessage += "Player 1: " + firstClientName + '\n'
-        startMessage += "Player 2: " + secondClientName + '\n'
-        startMessage += "==\n"
-        startMessage += "Please answer the following question as fast as you can:\n"
-        startMessage += "How much is "+str(firstNumber)+"+"+str(secondNumber)+"?\n"
-        sum = firstNumber + secondNumber
-        message = startMessage.encode()
-        clients[0][0].sendall(message)
-        clients[1][0].sendall(message)
+    firstClientName = clients[0][0].recv(BYTES_TO_RECIEVE).decode()
+    secondClientName = clients[1][0].recv(BYTES_TO_RECIEVE).decode()
+    clients[0][0].settimeout(TIMEOUT)
+    clients[1][0].settimeout(TIMEOUT)
+    #generate the question that will be sent to the clients
+    firstNumber = randrange(5)
+    secondNumber = randrange(6)
+    startMessage = "Welcome to Quick Maths.\n"
+    startMessage += "Player 1: " + firstClientName + '\n'
+    startMessage += "Player 2: " + secondClientName + '\n'
+    startMessage += "==\n"
+    startMessage += "Please answer the following question as fast as you can:\n"
+    startMessage += "How much is "+str(firstNumber)+"+"+str(secondNumber)+"?\n"
+    sum = firstNumber + secondNumber
+    message = startMessage.encode()
+    #send the question to the clients through each socket
+    clients[0][0].sendall(message)
+    clients[1][0].sendall(message)
+    namesTuple = [firstClientName, secondClientName]
 
-        namesTuple = [firstClientName, secondClientName]
-
+    #give the responsibility for collecting the data from both users to another thread    
+    receive_answer = Thread(target = collect_data,args= ((clients[0][0]), clients[1][0], sum, namesTuple)) #open thread for first client to get its answer
+    receive_answer.start()
+    receive_answer.join() 
         
-        firstClientThread = Thread(target = collect_data,args= ((clients[0][0]), clients[1][0], sum, namesTuple, namesTuple)) #open thread for first client to get its answer
-        firstClientThread.start()
-        firstClientThread.join() 
-        
+    #generate the message taht decleres who is the winning client
+    finish_game_message = "Game over!\nThe correct answer was "+ str(sum) +"!\n\n"
+    winnerClient = finish_game_message + "Congratulations to the winner: "+ winning_client +"\n"
+    draw_message = finish_game_message + "The game ended with a draw\n"
+    if winning_client == "no-winner": 
+        end_message = draw_message 
+    else:
+        end_message = winnerClient
 
-        finish_game_message = "Game over!\nThe correct answer was "+ str(sum) +"!\n"
-        winnerClient = finish_game_message + "Congratulations to the winner: "+ winning_client +"\n"
-        draw_message = finish_game_message + "The game ended with a draw\n"
-        if winning_client == "no-winner": 
-            end_message = draw_message 
-        else :
-            end_message = winnerClient
-        print(style.CYAN + end_message)
-        end_message = end_message.encode()
-        clients[0][0].sendall(end_message)
-        clients[1][0].sendall(end_message)
-    except:
-        ()
+    print(style.CYAN + end_message)
+
+    #send the results to both clients through their respective sockets
+    end_message = end_message.encode()
+    clients[0][0].sendall(end_message)
+    clients[1][0].sendall(end_message)
 
 
 
@@ -156,9 +157,9 @@ def connect_clients(connection_client, sock):
             client_tuple = [connection, client_address]
             print(client_address)
             connection_client.append(client_tuple)
-            print(style.BLUE + "New Player Added To The Game\n")
+            print(style.BLUE + "New Player Added To The Game")
         except:
-            ()
+            print("There was a problem while connecting new player to the game")
 
 
 def main():

@@ -1,15 +1,10 @@
 import socket
 import sys
 import os
-import time
-#from Server import TCP
 import socket
 import struct
 from threading import Thread
 import select
-
-
-
 
 TIMEOUT = 10
 BYTES_TO_READ = 1024
@@ -30,31 +25,31 @@ class style:
     RESET = '\033[0m'
 
 
-def get_from_server(tcp):
-    now = time.time()
-    stop = now + 10
-    server_has_answered = False
-    tcp.settimeout(TIMEOUT)
-    readers, writers, errors = select.select([sys.stdin, tcp], [], [], TIMEOUT)
+def get_from_server(TCP_Socket):
+    got_answer = False
+    TCP_Socket.settimeout(TIMEOUT)
+    readers, writers, errors = select.select([sys.stdin, TCP_Socket], [], [], TIMEOUT)
+    #for every objects that is ready to be read from
+    #read from it as expected to read from this kind of object 
     if sys.stdin in readers:
         c = sys.stdin.readline()[0]
         try:
             c = c.encode()
-            tcp.sendall(c)
+            TCP_Socket.sendall(c)
         except:
-            tcp.close()
+            TCP_Socket.close()
             return
-    if tcp in readers:
-        message = tcp.recv(BYTES_TO_READ)
+    if TCP_Socket in readers:
+        message = TCP_Socket.recv(BYTES_TO_READ)
         message = message.decode()
         sys.stdout.write(message)
-        server_has_answered = True
-    if not server_has_answered:
+        got_answer = True
+    if not got_answer:
         try:
-            print(tcp.recv(BYTES_TO_READ).decode())
+            print(TCP_Socket.recv(BYTES_TO_READ).decode())
         except:
             pass
-    tcp.close()
+    TCP_Socket.close()
 
 def main():
     print(style.GREEN + "Client started, listening for offer requests...")
@@ -71,7 +66,7 @@ def main():
         UDP_sock.close()
         #decode the data
         try:
-            cookie, message_type, server_tcp_port = struct.unpack('LBH', data)  # get message and encode it as a the given format
+            cookie, message_type, server_tcp_port = struct.unpack('lbH', data)  # get message and encode it as a the given format
             if cookie == 0xabcddcba or message_type == 0x2:  # check if the message is as the expected format
                 print(style.GREEN + "Received offer from " + server_ip_address + " attempting to connect...")
             TCP_socket.connect((server_ip_address, server_tcp_port))
