@@ -26,7 +26,7 @@ port = 2522
 ip_address = get_if_addr('eth1')
 #ip_address = "0.0.0.0"
 destination_port = 13117
-UDP_ip = ''
+UDP_ip = '<broadcast>'
 TIMEOUT = 10
 BYTES_TO_RECIEVE = 1024
 
@@ -34,8 +34,9 @@ BYTES_TO_RECIEVE = 1024
 UDP = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 UDP.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 UDP.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-#UDP.bind(('', port))
+UDP.bind(('', port))
 TCP = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+TCP.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 TCP.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
 TCP.bind(('', port))
 TCP.listen()
