@@ -38,7 +38,7 @@ UDP.bind(('', port))
 TCP = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #TCP.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 TCP.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
-TCP.bind(('', port))
+TCP.bind(('', 0))
 TCP.listen()
 
 #setting up the basis for the game
